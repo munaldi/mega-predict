@@ -5,7 +5,32 @@
 // e se comunica com o motor neural via EngineBridge.
 // ═══════════════════════════════════════════════════════════════
 
-import { EngineBridge } from '../../engine/engineBridge.js';
+// ── EngineBridge (inlined) ────────────────────────────────────────
+class EngineBridge {
+    constructor() {
+        this.worker = new Worker('/engine/neuralEngine.js');
+        this.listeners = {};
+        this.worker.onmessage = (e) => {
+            const { type, data } = e.data;
+            if (this.listeners[type]) {
+                this.listeners[type].forEach(fn => fn(data));
+            }
+        };
+    }
+    on(type, callback) {
+        if (!this.listeners[type]) this.listeners[type] = [];
+        this.listeners[type].push(callback);
+        return this;
+    }
+    off(type) {
+        if (type) { delete this.listeners[type]; } else { this.listeners = {}; }
+        return this;
+    }
+    train(draws) { this.worker.postMessage({ action: 'train', draws }); }
+    predict(draws) { this.worker.postMessage({ action: 'predict', draws }); }
+    trainAndPredict(draws) { this.worker.postMessage({ action: 'trainAndPredict', draws }); }
+    destroy() { this.worker.terminate(); this.listeners = {}; }
+}
 
 // ── Estado ──────────────────────────────────────────────────────
 const state = {
