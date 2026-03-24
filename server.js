@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Middleware ──────────────────────────────────────────────────
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Armazém de Dados (carregado do JSON) ────────────────────────
@@ -62,6 +62,33 @@ app.post('/api/draws', (req, res) => {
     draws.push(newDraw);
 
     res.status(201).json(newDraw);
+});
+
+// POST /api/draws/bulk — importa múltiplos sorteios; ignora concursos duplicados
+app.post('/api/draws/bulk', (req, res) => {
+    const { draws: incoming } = req.body;
+    if (!Array.isArray(incoming)) {
+        return res.status(400).json({ error: 'Formato inválido' });
+    }
+
+    const existingConcursos = new Set(draws.map(d => d.concurso));
+    let added = 0, skipped = 0;
+
+    incoming.forEach(item => {
+        const concurso = parseInt(item.concurso);
+        const numbers = (item.numbers || []).map(Number);
+
+        if (isNaN(concurso) || existingConcursos.has(concurso)) { skipped++; return; }
+        if (numbers.length !== 6 || numbers.some(n => isNaN(n) || n < 1 || n > 60)) { skipped++; return; }
+        if (new Set(numbers).size !== 6) { skipped++; return; }
+
+        draws.push({ concurso, numbers: numbers.sort((a, b) => a - b) });
+        existingConcursos.add(concurso);
+        added++;
+    });
+
+    draws.sort((a, b) => a.concurso - b.concurso);
+    res.json({ added, skipped });
 });
 
 // GET /api/frequency — análise de frequência dos números

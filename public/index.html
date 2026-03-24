@@ -62,6 +62,21 @@
                         Adicionar
                     </button>
                 </div>
+                <div class="add-draw__bulk">
+                    <button id="btn-download-template" class="btn btn--ghost">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v7M5 7l3 3 3-3M3 13h10"/></svg>
+                        Template CSV
+                    </button>
+                    <label for="input-csv-upload" class="btn btn--ghost" style="cursor:pointer">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 13V6M5 9l3-3 3 3M3 13h10"/></svg>
+                        Importar CSV
+                    </label>
+                    <input id="input-csv-upload" type="file" accept=".csv" style="display:none">
+                </div>
+                <div id="csv-progress" class="csv-progress" style="display:none">
+                    <div class="csv-progress__bar"><div id="csv-progress-fill" class="csv-progress__fill" style="width:0%"></div></div>
+                    <span id="bulk-import-status" class="add-draw__status"></span>
+                </div>
             </div>
 
             <!-- Filtro -->
@@ -96,7 +111,13 @@
 
         <!-- Direita: Frequência -->
         <div class="card freq-panel">
-            <div class="freq-panel__title">Frequência dos Números</div>
+            <div class="freq-panel__title">
+                Frequência dos Números
+                <button id="btn-refresh" class="btn btn--ghost" style="margin-left:auto;font-size:11px;padding:3px 10px;height:24px" title="Atualizar dados">
+                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 8a5.5 5.5 0 11-1.1-3.3"/><path d="M13.5 2v3h-3"/></svg>
+                    Atualizar
+                </button>
+            </div>
             <div id="freq-grid" class="freq-grid"></div>
             <div class="freq-summary">
                 <strong>6 mais frequentes:</strong><br>

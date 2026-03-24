@@ -64,6 +64,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupAddDraw();
     setupFilter();
     setupTrainButton();
+    setupBulkImport();
+
+    document.getElementById('btn-refresh').addEventListener('click', async () => {
+        const btn = document.getElementById('btn-refresh');
+        btn.disabled = true;
+        await loadDraws();
+        await loadFrequency();
+        btn.disabled = false;
+    });
 
     // Mostrar tela de sorteios por padrão
     switchScreen('lottery');
@@ -196,6 +205,102 @@ function setupAddDraw() {
         } catch (err) {
             console.error('Falha ao adicionar sorteio:', err);
         }
+    });
+}
+
+// ── Importação em Lote (CSV) ──────────────────────────────────────
+
+function readFileAsText(file, onProgress) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+        reader.onprogress = e => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+        reader.readAsText(file);
+    });
+}
+
+function setProgress(pct, label) {
+    document.getElementById('csv-progress').style.display = 'block';
+    document.getElementById('csv-progress-fill').style.width = pct + '%';
+    document.getElementById('bulk-import-status').textContent = label;
+}
+
+function hideProgress() {
+    document.getElementById('csv-progress').style.display = 'none';
+    document.getElementById('csv-progress-fill').style.width = '0%';
+}
+
+function setupBulkImport() {
+    document.getElementById('btn-download-template').addEventListener('click', () => {
+        const csv = 'Concurso,D1,D2,D3,D4,D5,D6\n';
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        a.download = 'template_sorteios.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('input-csv-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Passo 1 — leitura do arquivo (0–40%)
+        setProgress(0, 'Lendo arquivo...');
+        let text;
+        try {
+            text = await readFileAsText(file, pct => setProgress(pct * 40, 'Lendo arquivo...'));
+        } catch (err) {
+            setProgress(0, 'Erro ao ler arquivo.');
+            e.target.value = '';
+            return;
+        }
+
+        // Passo 2 — parse do CSV (40–70%)
+        setProgress(40, 'Processando CSV...');
+        const lines = text.trim().split(/\r?\n/).slice(1);
+        const incoming = [];
+        for (const line of lines) {
+            const cols = line.trim().split(',');
+            if (cols.length < 7) continue;
+            const concurso = parseInt(cols[0], 10);
+            const numbers = [cols[1], cols[2], cols[3], cols[4], cols[5], cols[6]].map(s => parseInt(s.trim(), 10));
+            if (isNaN(concurso) || numbers.some(isNaN)) continue;
+            incoming.push({ concurso, numbers });
+        }
+
+        if (incoming.length === 0) {
+            setProgress(0, 'Nenhum dado válido encontrado no arquivo.');
+            e.target.value = '';
+            return;
+        }
+        setProgress(70, `${incoming.length} linha(s) encontradas, enviando...`);
+
+        // Passo 3 — envio ao servidor (70–100%)
+        try {
+            const res = await fetch('/api/draws/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ draws: incoming }),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const { added, skipped } = await res.json();
+
+            setProgress(100, `${added} adicionado(s), ${skipped} ignorado(s) (já existiam ou inválidos)`);
+
+            if (added > 0) {
+                state.page = 0; // volta para os mais recentes
+                await loadDraws();
+                await loadFrequency();
+            }
+        } catch (err) {
+            setProgress(0, 'Erro ao importar: ' + err.message);
+            console.error(err);
+        }
+
+        e.target.value = '';
     });
 }
 

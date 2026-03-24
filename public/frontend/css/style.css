@@ -141,6 +141,13 @@ body {
 .btn--primary:hover { background: var(--highlight); }
 .btn--primary:disabled { background: var(--text-light); cursor: default; }
 .btn--large { padding: 10px 28px; font-size: 13px; height: auto; }
+.btn--ghost { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
+.btn--ghost:hover { background: var(--selected); }
+.add-draw__bulk { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.add-draw__status { font-size: 11px; color: var(--text-light); }
+.csv-progress { margin-top: 8px; }
+.csv-progress__bar { height: 4px; background: var(--border); overflow: hidden; }
+.csv-progress__fill { height: 100%; background: var(--brand); transition: width 0.25s ease; }
 
 /* Filter bar */
 .filter-bar {
@@ -192,7 +199,7 @@ body {
 
 /* Frequency panel */
 .freq-panel { padding: 16px; }
-.freq-panel__title { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.freq-panel__title { font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; }
 .freq-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
 .freq-cell { text-align: center; padding: 3px; }
 .freq-cell__bar {
