@@ -14,7 +14,6 @@ const isVercel = !!process.env.VERCEL;
 // ── Middleware ──────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/src', express.static(path.join(__dirname, 'src')));
 
 // ── Armazém de Dados (em memória, carregado do CSV) ────────────
 let draws = [];
