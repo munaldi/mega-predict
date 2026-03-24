@@ -5,52 +5,16 @@
 
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const isVercel = !!process.env.VERCEL;
 
 // ── Middleware ──────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ── Armazém de Dados (em memória, carregado do CSV) ────────────
-let draws = [];
-
-function loadDraws() {
-    const csvPath = path.join(__dirname, 'data', 'sorteios.csv');
-    if (!fs.existsSync(csvPath)) {
-        console.warn('⚠  data/sorteios.csv não encontrado — iniciando com dados vazios');
-        return;
-    }
-    const raw = fs.readFileSync(csvPath, 'utf-8');
-    const lines = raw.trim().split('\n').slice(1); // pula o cabeçalho
-    const seen = new Set();
-
-    lines.forEach(line => {
-        const cols = line.split(',');
-        const concurso = parseInt(cols[1]);
-        if (seen.has(concurso)) return; // evita duplicatas
-        seen.add(concurso);
-
-        const numbers = [
-            parseInt(cols[3]),
-            parseInt(cols[4]),
-            parseInt(cols[5]),
-            parseInt(cols[6]),
-            parseInt(cols[7]),
-            parseInt(cols[8]),
-        ];
-
-        if (numbers.every(n => n >= 1 && n <= 60)) {
-            draws.push({ concurso, numbers });
-        }
-    });
-
-    draws.sort((a, b) => a.concurso - b.concurso);
-    console.log(`✓  ${draws.length} sorteios únicos carregados do CSV`);
-}
+// ── Armazém de Dados (carregado do JSON) ────────────────────────
+const draws = require('./data/sorteios.json').slice();
 
 // ── Rotas da API ─────────────────────────────────────────────
 
@@ -121,17 +85,8 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Carrega os dados uma única vez na inicialização da função/processo.
-if (draws.length === 0) {
-    loadDraws();
-}
+app.listen(PORT, () => {
+    console.log(`\n🎱  M-SAP Mega-Sena Analytics rodando em http://localhost:${PORT}\n`);
+});
 
-// Em ambiente local, inicia o servidor HTTP normalmente.
-if (!isVercel) {
-    app.listen(PORT, () => {
-        console.log(`\n🎱  M-SAP Mega-Sena Analytics rodando em http://localhost:${PORT}\n`);
-    });
-}
-
-// Em Vercel, o Express app é usado como handler serverless.
 module.exports = app;
