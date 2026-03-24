@@ -1,0 +1,13 @@
+{
+  "name": "mega-sena-predictor",
+  "version": "1.0.0",
+  "description": "Mega-Sena lottery predictor using TensorFlow.js neural network",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-SAP — Plataforma de Análise Mega-Sena</title>
+    <link rel="stylesheet" href="/frontend/css/style.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     BARRA SUPERIOR (SHELL BAR)
+     ══════════════════════════════════════════════════════════════ -->
+<header class="shell-bar">
+    <div class="shell-bar__left">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.2">
+            <path d="M2 4h12M2 8h12M2 12h12"/>
+        </svg>
+        <span class="shell-bar__logo">M-SAP</span>
+        <span class="shell-bar__sep">|</span>
+        <span class="shell-bar__title">Plataforma de Análise Mega-Sena</span>
+    </div>
+    <div class="shell-bar__right">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.2">
+            <path d="M10.5 10.5L14 14M6.5 11a4.5 4.5 0 100-9 4.5 4.5 0 000 9z"/>
+        </svg>
+        <div class="shell-bar__avatar">US</div>
+    </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ABAS DE NAVEGAÇÃO
+     ══════════════════════════════════════════════════════════════ -->
+<nav class="nav-tabs">
+    <button class="nav-tab active" data-screen="lottery">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M2 4a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4zm3.5 1a.5.5 0 100 1 .5.5 0 000-1zm5 0a.5.5 0 100 1 .5.5 0 000-1zm-2.5 3a.5.5 0 100 1 .5.5 0 000-1zm-2.5 2a.5.5 0 100 1 .5.5 0 000-1zm5 0a.5.5 0 100 1 .5.5 0 000-1z"/>
+        </svg>
+        Sorteios
+    </button>
+    <button class="nav-tab" data-screen="predict">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M8 2a3 3 0 00-3 3c0 1-1 2-2 2.5S1 9 1 10s.5 2 2 2.5 2 1.5 2 2.5a3 3 0 006 0c0-1 1-2 2-2.5S15 11 15 10s-.5-2-2-2.5-2-1.5-2-2.5a3 3 0 00-3-3z"/>
+        </svg>
+        Previsão Neural
+    </button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TELA: SORTEIOS (DADOS DA LOTERIA)
+     ══════════════════════════════════════════════════════════════ -->
+<main id="screen-lottery" class="screen active">
+    <div class="lottery-layout">
+        <!-- Esquerda: Tabela de Dados -->
+        <div class="card">
+            <!-- Adicionar novo sorteio -->
+            <div class="add-draw">
+                <div class="add-draw__title">Adicionar Novo Resultado</div>
+                <div class="add-draw__row">
+                    <input class="add-draw__input" placeholder="D1" maxlength="2">
+                    <input class="add-draw__input" placeholder="D2" maxlength="2">
+                    <input class="add-draw__input" placeholder="D3" maxlength="2">
+                    <input class="add-draw__input" placeholder="D4" maxlength="2">
+                    <input class="add-draw__input" placeholder="D5" maxlength="2">
+                    <input class="add-draw__input" placeholder="D6" maxlength="2">
+                    <button id="btn-add-draw" class="btn btn--primary">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+                        Adicionar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtro -->
+            <div class="filter-bar">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#6a6d70" stroke-width="1.2">
+                    <path d="M10.5 10.5L14 14M6.5 11a4.5 4.5 0 100-9 4.5 4.5 0 000 9z"/>
+                </svg>
+                <input id="filter-input" class="filter-bar__input" placeholder="Filtrar por número...">
+                <span id="draw-count" class="filter-bar__count">0 sorteios</span>
+            </div>
+
+            <!-- Tabela -->
+            <div style="overflow:auto;max-height:400px">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Concurso</th>
+                            <th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th>
+                        </tr>
+                    </thead>
+                    <tbody id="draws-tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Paginação -->
+            <div class="pagination">
+                <button id="btn-older" class="pagination__btn">&laquo; Anteriores</button>
+                <span id="page-info" class="pagination__info">Página 1 de 1</span>
+                <button id="btn-newer" class="pagination__btn">Recentes &raquo;</button>
+            </div>
+        </div>
+
+        <!-- Direita: Frequência -->
+        <div class="card freq-panel">
+            <div class="freq-panel__title">Frequência dos Números</div>
+            <div id="freq-grid" class="freq-grid"></div>
+            <div class="freq-summary">
+                <strong>6 mais frequentes:</strong><br>
+                <span id="most-frequent">—</span>
+                <br><br>
+                <strong>6 menos frequentes:</strong><br>
+                <span id="least-frequent">—</span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TELA: PREVISÃO NEURAL
+     ══════════════════════════════════════════════════════════════ -->
+<main id="screen-predict" class="screen">
+    <div class="predict-layout">
+        <!-- Cabeçalho do Motor Neural -->
+        <div class="card engine-header">
+            <div class="engine-header__top">
+                <div class="engine-header__icon">
+                    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.2">
+                        <path d="M8 2a3 3 0 00-3 3c0 1-1 2-2 2.5S1 9 1 10s.5 2 2 2.5 2 1.5 2 2.5a3 3 0 006 0c0-1 1-2 2-2.5S15 11 15 10s-.5-2-2-2.5-2-1.5-2-2.5a3 3 0 00-3-3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="engine-header__name">Rede Neural TensorFlow.js</div>
+                    <div class="engine-header__sub">Perceptron multicamada treinado com <span id="draw-count-predict">0</span> sorteios da Mega-Sena</div>
+                </div>
+            </div>
+            <div class="engine-header__info">
+                <strong>Arquitetura:</strong> Entrada(10×60 binário) → Densa(256, ReLU) → Dropout(0,3) → Densa(128, ReLU) → Dropout(0,2) → Densa(64, ReLU) → Densa(60, Sigmoid)
+                <br>O modelo usa uma janela deslizante de 10 sorteios, codificando cada um como um vetor binário de 60 bits. Ele aprende padrões de co-ocorrência de números e sequências temporais.
+                <br><br>
+                <strong class="engine-header__warn">Aviso:</strong> Sorteios de loteria são eventos aleatórios. Redes neurais não conseguem prever resultados verdadeiramente aleatórios. Este é um demonstrativo técnico das capacidades do TensorFlow.js — não é aconselhamento financeiro.
+            </div>
+            <button id="btn-train" class="btn btn--primary btn--large">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.2"><path d="M4 3l9 5-9 5V3z"/></svg>
+                Treinar e Prever
+            </button>
+        </div>
+
+        <!-- Progresso do Treinamento (oculto até iniciar) -->
+        <div id="training-card" class="card training-card hidden">
+            <div class="training-card__header">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--brand)" stroke-width="1.2">
+                    <path d="M2 14V6h3v8H2zm4.5 0V2h3v12h-3zM11 14V8h3v6h-3z"/>
+                </svg>
+                Progresso do Treinamento
+                <span class="training-card__status training-card__status--running"></span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-bar__track">
+                    <div class="progress-bar__fill progress-bar__fill--running" style="width:0%"></div>
+                </div>
+            </div>
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <div class="metric-card__label">Perda</div>
+                    <div id="metric-loss" class="metric-card__value metric-card__value--loss">—</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card__label">Acurácia</div>
+                    <div id="metric-acc" class="metric-card__value metric-card__value--acc">—</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card__label">Perda Validação</div>
+                    <div id="metric-val" class="metric-card__value metric-card__value--val">—</div>
+                </div>
+            </div>
+            <div class="epoch-log">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Época</th><th>Perda</th><th>Acurácia</th><th>Perda Val.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="epoch-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Resultado da Previsão (oculto até prever) -->
+        <div id="prediction-card" class="card prediction-card hidden">
+            <div class="prediction-card__header">
+                Números Previstos — Concurso <span id="prediction-concurso"></span>
+            </div>
+            <div id="prediction-balls" class="prediction-balls"></div>
+        </div>
+
+        <!-- Mapa de Calor (oculto até prever) -->
+        <div id="heatmap-card" class="card heatmap hidden">
+            <div class="heatmap__title">Todos os Números — Pontuação de Confiança</div>
+            <div id="heatmap-grid" class="heatmap__grid"></div>
+        </div>
+    </div>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     RODAPÉ
+     ══════════════════════════════════════════════════════════════ -->
+<footer class="footer">
+    Análise Mega-Sena · Rede Neural TensorFlow.js · <span id="footer-count">0</span> sorteios carregados
+</footer>
+
+<!-- ══════════════════════════════════════════════════════════════
+     JAVASCRIPT DO FRONTEND (módulo — único script)
+     ══════════════════════════════════════════════════════════════ -->
+<script type="module" src="/frontend/js/app.js"></script>
+
+</body>
+</html>
